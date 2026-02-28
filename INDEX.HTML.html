@@ -1,0 +1,771 @@
+<!doctype html>
+<html lang="en" class="h-full">
+ <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SIP Calculator Pro</title>
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <script src="/_sdk/element_sdk.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&amp;family=Space+Grotesk:wght@500;600;700&amp;display=swap" rel="stylesheet">
+  <style>
+    * { font-family: 'DM Sans', sans-serif; }
+    .font-display { font-family: 'Space Grotesk', sans-serif; }
+    
+    .gradient-bg {
+      background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%);
+    }
+    
+    .card-glass {
+      background: rgba(30, 41, 59, 0.6);
+      backdrop-filter: blur(20px);
+      border: 1px solid rgba(99, 102, 241, 0.2);
+    }
+    
+    .glow-indigo {
+      box-shadow: 0 0 40px rgba(99, 102, 241, 0.3);
+    }
+    
+    .input-range {
+      -webkit-appearance: none;
+      appearance: none;
+      height: 6px;
+      border-radius: 3px;
+      background: linear-gradient(90deg, #6366f1 0%, #8b5cf6 100%);
+    }
+    
+    .input-range::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #6366f1, #8b5cf6);
+      cursor: pointer;
+      box-shadow: 0 0 15px rgba(99, 102, 241, 0.6);
+      transition: transform 0.2s;
+    }
+    
+    .input-range::-webkit-slider-thumb:hover {
+      transform: scale(1.15);
+    }
+    
+    .input-range::-moz-range-thumb {
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #6366f1, #8b5cf6);
+      cursor: pointer;
+      border: none;
+      box-shadow: 0 0 15px rgba(99, 102, 241, 0.6);
+    }
+    
+    .stat-card {
+      background: linear-gradient(145deg, rgba(99, 102, 241, 0.1), rgba(139, 92, 246, 0.05));
+      border: 1px solid rgba(99, 102, 241, 0.3);
+    }
+    
+    .toggle-btn {
+      transition: all 0.3s ease;
+    }
+    
+    .toggle-btn.active {
+      background: linear-gradient(135deg, #6366f1, #8b5cf6);
+      color: white;
+    }
+    
+    .pulse-dot {
+      animation: pulse 2s infinite;
+    }
+    
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.7; transform: scale(1.2); }
+    }
+    
+    .number-input {
+      background: rgba(15, 23, 42, 0.8);
+      border: 1px solid rgba(99, 102, 241, 0.3);
+    }
+    
+    .number-input:focus {
+      border-color: #6366f1;
+      box-shadow: 0 0 20px rgba(99, 102, 241, 0.3);
+    }
+
+    .tab-btn {
+      position: relative;
+      overflow: hidden;
+    }
+
+    .tab-btn::before {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 50%;
+      width: 0;
+      height: 2px;
+      background: linear-gradient(90deg, #6366f1, #8b5cf6);
+      transition: all 0.3s ease;
+      transform: translateX(-50%);
+    }
+
+    .tab-btn.active::before {
+      width: 100%;
+    }
+
+    .milestone-line {
+      background: linear-gradient(180deg, #6366f1 0%, transparent 100%);
+    }
+  </style>
+  <style>body { box-sizing: border-box; }
+    body.light-theme {
+      background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 50%, #f8fafc 100%) !important;
+      color: #1e293b !important;
+    }
+    body.light-theme .card-glass {
+      background: rgba(226, 232, 240, 0.6) !important;
+      border-color: rgba(99, 102, 241, 0.2) !important;
+    }
+    body.light-theme .text-slate-300 { color: #475569 !important; }
+    body.light-theme .text-slate-400 { color: #64748b !important; }
+    body.light-theme .text-slate-500 { color: #78909c !important; }
+    body.light-theme .bg-slate-800 { background: #e2e8f0 !important; }
+    body.light-theme .bg-slate-700 { background: #cbd5e1 !important; }
+    body.light-theme .bg-slate-800\/50 { background: rgba(226, 232, 240, 0.5) !important; }
+    body.light-theme .border-slate-700 { border-color: #cbd5e1 !important; }
+    body.light-theme .number-input {
+      background: rgba(241, 245, 249, 0.8) !important;
+      color: #1e293b !important;
+      border-color: rgba(99, 102, 241, 0.3) !important;
+    }
+    body.light-theme .stat-card {
+      background: linear-gradient(145deg, rgba(99, 102, 241, 0.08), rgba(139, 92, 246, 0.04)) !important;
+      border-color: rgba(99, 102, 241, 0.25) !important;
+    }
+  </style>
+  <script src="/_sdk/data_sdk.js" type="text/javascript"></script>
+ </head>
+ <body class="h-full gradient-bg text-white overflow-auto">
+  <div class="min-h-full w-full p-4 md:p-8">
+   <!-- Header -->
+   <header class="text-center mb-8">
+    <div class="inline-flex items-center gap-4 mb-3">
+     <div class="w-3 h-3 rounded-full bg-indigo-500 pulse-dot"></div><span class="text-indigo-400 text-sm font-medium tracking-wider uppercase">Wealth Planning Tool</span> <button onclick="toggleTheme()" id="theme-toggle" class="ml-2 p-2 rounded-lg hover:bg-slate-800 transition-all text-lg">🌙</button>
+    </div>
+    <h1 id="main-title" class="font-display text-4xl md:text-5xl font-bold bg-gradient-to-r from-white via-indigo-200 to-purple-200 bg-clip-text text-transparent mb-2">SIP Calculator Pro</h1>
+    <p id="subtitle" class="text-slate-400 text-lg">Plan your wealth journey with precision</p>
+   </header><!-- Mode Tabs -->
+   <div class="flex justify-center mb-8">
+    <div class="card-glass rounded-2xl p-1.5 inline-flex gap-1">
+     <button onclick="setMode('basic')" id="tab-basic" class="tab-btn active px-6 py-2.5 rounded-xl text-sm font-semibold transition-all"> Basic SIP </button> <button onclick="setMode('stepup')" id="tab-stepup" class="tab-btn px-6 py-2.5 rounded-xl text-sm font-semibold transition-all text-slate-400 hover:text-white"> Step-Up SIP </button> <button onclick="setMode('goal')" id="tab-goal" class="tab-btn px-6 py-2.5 rounded-xl text-sm font-semibold transition-all text-slate-400 hover:text-white"> Goal Planner </button>
+    </div>
+   </div>
+   <div class="max-w-7xl mx-auto grid lg:grid-cols-2 gap-8">
+    <!-- Calculator Panel -->
+    <div class="card-glass rounded-3xl p-6 md:p-8 glow-indigo">
+     <!-- Basic & Step-Up Mode Inputs -->
+     <div id="input-panel">
+      <!-- Monthly Investment -->
+      <div class="mb-8">
+       <div class="flex justify-between items-center mb-3">
+        <label class="text-slate-300 font-medium">Monthly Investment</label>
+        <div class="flex items-center gap-2">
+         <span class="text-indigo-400">₹</span> <input type="number" id="monthly-input" value="10000" min="500" max="1000000" class="number-input w-28 px-3 py-2 rounded-lg text-right text-white font-semibold outline-none" onchange="updateFromInput('monthly')">
+        </div>
+       </div><input type="range" id="monthly-range" min="500" max="200000" value="10000" step="500" class="input-range w-full" oninput="updateSlider('monthly')">
+       <div class="flex justify-between text-xs text-slate-500 mt-2">
+        <span>₹500</span> <span>₹2,00,000</span>
+       </div>
+      </div><!-- Expected Return -->
+      <div class="mb-8">
+       <div class="flex justify-between items-center mb-3">
+        <label class="text-slate-300 font-medium">Expected Return (p.a.)</label>
+        <div class="flex items-center gap-2">
+         <input type="number" id="return-input" value="12" min="1" max="30" step="0.5" class="number-input w-20 px-3 py-2 rounded-lg text-right text-white font-semibold outline-none" onchange="updateFromInput('return')"> <span class="text-indigo-400">%</span>
+        </div>
+       </div><input type="range" id="return-range" min="1" max="30" value="12" step="0.5" class="input-range w-full" oninput="updateSlider('return')">
+       <div class="flex justify-between text-xs text-slate-500 mt-2">
+        <span>1%</span> <span>30%</span>
+       </div>
+      </div><!-- Time Period -->
+      <div class="mb-8">
+       <div class="flex justify-between items-center mb-3">
+        <label class="text-slate-300 font-medium">Investment Period</label>
+        <div class="flex items-center gap-2">
+         <input type="number" id="period-input" value="10" min="1" max="40" class="number-input w-20 px-3 py-2 rounded-lg text-right text-white font-semibold outline-none" onchange="updateFromInput('period')"> <span class="text-indigo-400">Years</span>
+        </div>
+       </div><input type="range" id="period-range" min="1" max="40" value="10" class="input-range w-full" oninput="updateSlider('period')">
+       <div class="flex justify-between text-xs text-slate-500 mt-2">
+        <span>1 Year</span> <span>40 Years</span>
+       </div>
+      </div><!-- Step-Up Rate (only visible in step-up mode) -->
+      <div id="stepup-section" class="mb-8 hidden">
+       <div class="flex justify-between items-center mb-3">
+        <label class="text-slate-300 font-medium">Annual Step-Up Rate</label>
+        <div class="flex items-center gap-2">
+         <input type="number" id="stepup-input" value="10" min="0" max="50" class="number-input w-20 px-3 py-2 rounded-lg text-right text-white font-semibold outline-none" onchange="updateFromInput('stepup')"> <span class="text-indigo-400">%</span>
+        </div>
+       </div><input type="range" id="stepup-range" min="0" max="50" value="10" class="input-range w-full" oninput="updateSlider('stepup')">
+       <div class="flex justify-between text-xs text-slate-500 mt-2">
+        <span>0%</span> <span>50%</span>
+       </div>
+       <p class="text-xs text-slate-500 mt-2">💡 Increase your SIP amount annually to beat inflation</p>
+      </div><!-- Inflation Toggle -->
+      <div class="flex items-center justify-between p-4 rounded-xl bg-slate-800/50 mb-6">
+       <div>
+        <p class="text-slate-300 font-medium">Adjust for Inflation</p>
+        <p class="text-xs text-slate-500">See real purchasing power</p>
+       </div><button id="inflation-toggle" onclick="toggleInflation()" class="w-14 h-8 rounded-full bg-slate-700 relative transition-all">
+        <div id="toggle-dot" class="absolute top-1 left-1 w-6 h-6 rounded-full bg-slate-400 transition-all"></div></button>
+      </div><!-- Inflation Rate (shows when toggle is on) -->
+      <div id="inflation-section" class="mb-6 hidden">
+       <div class="flex justify-between items-center mb-3">
+        <label class="text-slate-300 font-medium">Inflation Rate</label>
+        <div class="flex items-center gap-2">
+         <input type="number" id="inflation-input" value="6" min="0" max="15" step="0.5" class="number-input w-20 px-3 py-2 rounded-lg text-right text-white font-semibold outline-none" onchange="updateFromInput('inflation')"> <span class="text-indigo-400">%</span>
+        </div>
+       </div><input type="range" id="inflation-range" min="0" max="15" value="6" step="0.5" class="input-range w-full" oninput="updateSlider('inflation')">
+      </div>
+     </div><!-- Goal Planner Mode Inputs -->
+     <div id="goal-panel" class="hidden">
+      <div class="mb-8">
+       <div class="flex justify-between items-center mb-3">
+        <label class="text-slate-300 font-medium">Target Amount</label>
+        <div class="flex items-center gap-2">
+         <span class="text-indigo-400">₹</span> <input type="number" id="goal-input" value="10000000" min="100000" max="100000000" class="number-input w-36 px-3 py-2 rounded-lg text-right text-white font-semibold outline-none" onchange="updateFromInput('goal')">
+        </div>
+       </div><input type="range" id="goal-range" min="100000" max="100000000" value="10000000" step="100000" class="input-range w-full" oninput="updateSlider('goal')">
+       <div class="flex justify-between text-xs text-slate-500 mt-2">
+        <span>₹1 Lakh</span> <span>₹10 Crore</span>
+       </div>
+      </div>
+      <div class="mb-8">
+       <div class="flex justify-between items-center mb-3">
+        <label class="text-slate-300 font-medium">Time to Goal</label>
+        <div class="flex items-center gap-2">
+         <input type="number" id="goal-period-input" value="15" min="1" max="40" class="number-input w-20 px-3 py-2 rounded-lg text-right text-white font-semibold outline-none" onchange="updateFromInput('goal-period')"> <span class="text-indigo-400">Years</span>
+        </div>
+       </div><input type="range" id="goal-period-range" min="1" max="40" value="15" class="input-range w-full" oninput="updateSlider('goal-period')">
+      </div>
+      <div class="mb-8">
+       <div class="flex justify-between items-center mb-3">
+        <label class="text-slate-300 font-medium">Expected Return (p.a.)</label>
+        <div class="flex items-center gap-2">
+         <input type="number" id="goal-return-input" value="12" min="1" max="30" step="0.5" class="number-input w-20 px-3 py-2 rounded-lg text-right text-white font-semibold outline-none" onchange="updateFromInput('goal-return')"> <span class="text-indigo-400">%</span>
+        </div>
+       </div><input type="range" id="goal-return-range" min="1" max="30" value="12" step="0.5" class="input-range w-full" oninput="updateSlider('goal-return')">
+      </div><!-- Goal preset buttons -->
+      <div class="grid grid-cols-2 gap-3 mb-6">
+       <button onclick="setGoalPreset('retirement')" class="p-4 rounded-xl bg-slate-800/50 hover:bg-indigo-600/20 border border-slate-700 hover:border-indigo-500 transition-all text-left"> <span class="text-2xl mb-2 block">🏖️</span> <span class="font-medium text-sm">Retirement</span> <span class="text-xs text-slate-500 block">₹5 Cr in 25 yrs</span> </button> <button onclick="setGoalPreset('house')" class="p-4 rounded-xl bg-slate-800/50 hover:bg-indigo-600/20 border border-slate-700 hover:border-indigo-500 transition-all text-left"> <span class="text-2xl mb-2 block">🏠</span> <span class="font-medium text-sm">Dream Home</span> <span class="text-xs text-slate-500 block">₹1 Cr in 10 yrs</span> </button> <button onclick="setGoalPreset('education')" class="p-4 rounded-xl bg-slate-800/50 hover:bg-indigo-600/20 border border-slate-700 hover:border-indigo-500 transition-all text-left"> <span class="text-2xl mb-2 block">🎓</span> <span class="font-medium text-sm">Education</span> <span class="text-xs text-slate-500 block">₹50 L in 15 yrs</span> </button> <button onclick="setGoalPreset('car')" class="p-4 rounded-xl bg-slate-800/50 hover:bg-indigo-600/20 border border-slate-700 hover:border-indigo-500 transition-all text-left"> <span class="text-2xl mb-2 block">🚗</span> <span class="font-medium text-sm">Dream Car</span> <span class="text-xs text-slate-500 block">₹20 L in 5 yrs</span> </button>
+      </div>
+     </div>
+    </div><!-- Results Panel -->
+    <div class="space-y-6">
+     <!-- Main Result Cards -->
+     <div class="grid grid-cols-2 gap-4">
+      <div class="stat-card rounded-2xl p-5">
+       <p class="text-slate-400 text-sm mb-1">Total Investment</p>
+       <p id="total-invested" class="font-display text-2xl md:text-3xl font-bold text-white">₹12,00,000</p>
+      </div>
+      <div class="stat-card rounded-2xl p-5">
+       <p class="text-slate-400 text-sm mb-1">Est. Returns</p>
+       <p id="total-returns" class="font-display text-2xl md:text-3xl font-bold text-emerald-400">₹11,23,391</p>
+      </div>
+     </div>
+     <div class="stat-card rounded-2xl p-6">
+      <p class="text-slate-400 text-sm mb-1">Total Value</p>
+      <p id="total-value" class="font-display text-3xl md:text-4xl font-bold bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text text-transparent">₹23,23,391</p>
+      <div id="inflation-adjusted" class="hidden mt-2">
+       <p class="text-slate-500 text-sm">Inflation Adjusted Value</p>
+       <p id="adjusted-value" class="font-display text-xl font-semibold text-slate-300">₹12,98,234</p>
+      </div>
+     </div><!-- Goal Mode Required SIP -->
+     <div id="required-sip-card" class="stat-card rounded-2xl p-6 hidden">
+      <p class="text-slate-400 text-sm mb-1">Required Monthly SIP</p>
+      <p id="required-sip" class="font-display text-3xl md:text-4xl font-bold bg-gradient-to-r from-emerald-400 to-teal-400 bg-clip-text text-transparent">₹20,000</p>
+      <p class="text-slate-500 text-sm mt-2">to reach your goal of ₹1 Crore</p>
+     </div><!-- Chart -->
+     <div class="card-glass rounded-2xl p-5">
+      <div class="flex justify-between items-center mb-4">
+       <h3 class="font-semibold text-slate-300">Growth Projection</h3>
+       <div class="flex gap-2">
+        <button onclick="setChartType('line')" id="chart-line" class="toggle-btn active px-3 py-1 rounded-lg text-xs font-medium"> Line </button> <button onclick="setChartType('doughnut')" id="chart-doughnut" class="toggle-btn px-3 py-1 rounded-lg text-xs font-medium text-slate-400"> Split </button>
+       </div>
+      </div>
+      <div class="relative h-64">
+       <canvas id="sipChart"></canvas>
+      </div>
+     </div><!-- Milestones -->
+     <div class="card-glass rounded-2xl p-5">
+      <h3 class="font-semibold text-slate-300 mb-4">🎯 Wealth Milestones</h3>
+      <div id="milestones" class="space-y-3">
+       <!-- Milestones will be populated dynamically -->
+      </div>
+     </div><!-- Year-wise Breakdown -->
+     <div class="card-glass rounded-2xl p-5">
+      <h3 class="font-semibold text-slate-300 mb-4">📊 Year-wise Growth</h3>
+      <div id="yearly-table" class="max-h-64 overflow-y-auto">
+       <table class="w-full text-sm">
+        <thead class="sticky top-0 bg-slate-800">
+         <tr class="text-slate-400 border-b border-slate-700">
+          <th class="text-left py-2">Year</th>
+          <th class="text-right py-2">Invested</th>
+          <th class="text-right py-2">Value</th>
+          <th class="text-right py-2">Gain</th>
+         </tr>
+        </thead>
+        <tbody id="yearly-body">
+         <!-- Rows populated dynamically -->
+        </tbody>
+       </table>
+      </div>
+     </div>
+    </div>
+   </div><!-- Footer -->
+   <footer class="text-center mt-12 text-slate-500 text-sm">
+    <p>📈 Start early, stay consistent, grow wealthy</p>
+    <p class="text-xs mt-2">Returns are illustrative and not guaranteed. Mutual fund investments are subject to market risks.</p>
+   </footer>
+  </div>
+  <script>
+    // Configuration
+    const defaultConfig = {
+      main_title: 'SIP Calculator Pro',
+      subtitle: 'Plan your wealth journey with precision',
+      primary_color: '#6366f1',
+      secondary_color: '#8b5cf6',
+      background_color: '#0f172a',
+      text_color: '#e2e8f0',
+      accent_color: '#10b981',
+      font_family: 'DM Sans'
+    };
+
+    let config = { ...defaultConfig };
+
+    // State
+    let currentMode = 'basic';
+    let chartType = 'line';
+    let inflationEnabled = false;
+    let sipChart = null;
+
+    // Initialize SDK
+    if (window.elementSdk) {
+      window.elementSdk.init({
+        defaultConfig,
+        onConfigChange: async (newConfig) => {
+          config = { ...defaultConfig, ...newConfig };
+          applyConfig();
+        },
+        mapToCapabilities: (cfg) => ({
+          recolorables: [
+            {
+              get: () => cfg.background_color || defaultConfig.background_color,
+              set: (v) => { cfg.background_color = v; window.elementSdk.setConfig({ background_color: v }); }
+            },
+            {
+              get: () => cfg.primary_color || defaultConfig.primary_color,
+              set: (v) => { cfg.primary_color = v; window.elementSdk.setConfig({ primary_color: v }); }
+            },
+            {
+              get: () => cfg.text_color || defaultConfig.text_color,
+              set: (v) => { cfg.text_color = v; window.elementSdk.setConfig({ text_color: v }); }
+            },
+            {
+              get: () => cfg.secondary_color || defaultConfig.secondary_color,
+              set: (v) => { cfg.secondary_color = v; window.elementSdk.setConfig({ secondary_color: v }); }
+            },
+            {
+              get: () => cfg.accent_color || defaultConfig.accent_color,
+              set: (v) => { cfg.accent_color = v; window.elementSdk.setConfig({ accent_color: v }); }
+            }
+          ],
+          borderables: [],
+          fontEditable: {
+            get: () => cfg.font_family || defaultConfig.font_family,
+            set: (v) => { cfg.font_family = v; window.elementSdk.setConfig({ font_family: v }); }
+          },
+          fontSizeable: undefined
+        }),
+        mapToEditPanelValues: (cfg) => new Map([
+          ['main_title', cfg.main_title || defaultConfig.main_title],
+          ['subtitle', cfg.subtitle || defaultConfig.subtitle]
+        ])
+      });
+    }
+
+    function applyConfig() {
+      document.getElementById('main-title').textContent = config.main_title || defaultConfig.main_title;
+      document.getElementById('subtitle').textContent = config.subtitle || defaultConfig.subtitle;
+      
+      const fontFamily = config.font_family || defaultConfig.font_family;
+      document.body.style.fontFamily = `${fontFamily}, sans-serif`;
+    }
+
+    // Calculator Functions
+    function calculateSIP() {
+      const monthly = parseFloat(document.getElementById('monthly-input').value) || 10000;
+      const rate = parseFloat(document.getElementById('return-input').value) || 12;
+      const years = parseInt(document.getElementById('period-input').value) || 10;
+      const stepupRate = parseFloat(document.getElementById('stepup-input').value) || 10;
+      const inflationRate = parseFloat(document.getElementById('inflation-input').value) || 6;
+
+      let totalInvested = 0;
+      let totalValue = 0;
+      const monthlyRate = rate / 12 / 100;
+      const yearlyData = [];
+
+      if (currentMode === 'stepup') {
+        let currentMonthly = monthly;
+        for (let year = 1; year <= years; year++) {
+          for (let month = 1; month <= 12; month++) {
+            totalInvested += currentMonthly;
+            totalValue = (totalValue + currentMonthly) * (1 + monthlyRate);
+          }
+          yearlyData.push({
+            year,
+            invested: totalInvested,
+            value: totalValue,
+            gain: totalValue - totalInvested
+          });
+          currentMonthly = currentMonthly * (1 + stepupRate / 100);
+        }
+      } else {
+        for (let year = 1; year <= years; year++) {
+          for (let month = 1; month <= 12; month++) {
+            totalInvested += monthly;
+            totalValue = (totalValue + monthly) * (1 + monthlyRate);
+          }
+          yearlyData.push({
+            year,
+            invested: totalInvested,
+            value: totalValue,
+            gain: totalValue - totalInvested
+          });
+        }
+      }
+
+      const returns = totalValue - totalInvested;
+      let adjustedValue = totalValue;
+      
+      if (inflationEnabled) {
+        adjustedValue = totalValue / Math.pow(1 + inflationRate / 100, years);
+      }
+
+      updateDisplay(totalInvested, returns, totalValue, adjustedValue, yearlyData);
+      updateChart(yearlyData);
+      updateMilestones(yearlyData);
+      updateYearlyTable(yearlyData);
+    }
+
+    function calculateGoalSIP() {
+      const goal = parseFloat(document.getElementById('goal-input').value) || 10000000;
+      const years = parseInt(document.getElementById('goal-period-input').value) || 15;
+      const rate = parseFloat(document.getElementById('goal-return-input').value) || 12;
+
+      const monthlyRate = rate / 12 / 100;
+      const months = years * 12;
+      
+      // PMT formula for SIP
+      const requiredSIP = goal * monthlyRate / (Math.pow(1 + monthlyRate, months) - 1);
+      
+      document.getElementById('required-sip').textContent = formatCurrency(requiredSIP);
+      
+      // Calculate projection with required SIP
+      let totalInvested = 0;
+      let totalValue = 0;
+      const yearlyData = [];
+
+      for (let year = 1; year <= years; year++) {
+        for (let month = 1; month <= 12; month++) {
+          totalInvested += requiredSIP;
+          totalValue = (totalValue + requiredSIP) * (1 + monthlyRate);
+        }
+        yearlyData.push({
+          year,
+          invested: totalInvested,
+          value: totalValue,
+          gain: totalValue - totalInvested
+        });
+      }
+
+      const returns = totalValue - totalInvested;
+      updateDisplay(totalInvested, returns, totalValue, totalValue, yearlyData);
+      updateChart(yearlyData);
+      updateMilestones(yearlyData);
+      updateYearlyTable(yearlyData);
+    }
+
+    function formatCurrency(amount) {
+      if (amount >= 10000000) {
+        return '₹' + (amount / 10000000).toFixed(2) + ' Cr';
+      } else if (amount >= 100000) {
+        return '₹' + (amount / 100000).toFixed(2) + ' L';
+      }
+      return '₹' + Math.round(amount).toLocaleString('en-IN');
+    }
+
+    function updateDisplay(invested, returns, total, adjusted, yearlyData) {
+      document.getElementById('total-invested').textContent = formatCurrency(invested);
+      document.getElementById('total-returns').textContent = formatCurrency(returns);
+      document.getElementById('total-value').textContent = formatCurrency(total);
+      document.getElementById('adjusted-value').textContent = formatCurrency(adjusted);
+    }
+
+    function updateChart(yearlyData) {
+      const ctx = document.getElementById('sipChart').getContext('2d');
+      
+      if (sipChart) {
+        sipChart.destroy();
+      }
+
+      if (chartType === 'line') {
+        sipChart = new Chart(ctx, {
+          type: 'line',
+          data: {
+            labels: yearlyData.map(d => `Year ${d.year}`),
+            datasets: [
+              {
+                label: 'Total Value',
+                data: yearlyData.map(d => d.value),
+                borderColor: '#8b5cf6',
+                backgroundColor: 'rgba(139, 92, 246, 0.1)',
+                fill: true,
+                tension: 0.4
+              },
+              {
+                label: 'Invested',
+                data: yearlyData.map(d => d.invested),
+                borderColor: '#6366f1',
+                backgroundColor: 'rgba(99, 102, 241, 0.1)',
+                fill: true,
+                tension: 0.4
+              }
+            ]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: {
+                labels: { color: '#94a3b8' }
+              }
+            },
+            scales: {
+              x: {
+                ticks: { color: '#64748b' },
+                grid: { color: 'rgba(100, 116, 139, 0.1)' }
+              },
+              y: {
+                ticks: { 
+                  color: '#64748b',
+                  callback: (value) => formatCurrency(value)
+                },
+                grid: { color: 'rgba(100, 116, 139, 0.1)' }
+              }
+            }
+          }
+        });
+      } else {
+        const lastYear = yearlyData[yearlyData.length - 1];
+        sipChart = new Chart(ctx, {
+          type: 'doughnut',
+          data: {
+            labels: ['Invested Amount', 'Returns Earned'],
+            datasets: [{
+              data: [lastYear.invested, lastYear.gain],
+              backgroundColor: ['#6366f1', '#10b981'],
+              borderWidth: 0
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: {
+                position: 'bottom',
+                labels: { color: '#94a3b8', padding: 20 }
+              }
+            },
+            cutout: '65%'
+          }
+        });
+      }
+    }
+
+    function updateMilestones(yearlyData) {
+      const milestones = [100000, 500000, 1000000, 2500000, 5000000, 10000000, 50000000, 100000000];
+      const milestonesContainer = document.getElementById('milestones');
+      milestonesContainer.innerHTML = '';
+
+      const achievedMilestones = [];
+      milestones.forEach(milestone => {
+        const yearAchieved = yearlyData.find(d => d.value >= milestone);
+        if (yearAchieved) {
+          achievedMilestones.push({ amount: milestone, year: yearAchieved.year });
+        }
+      });
+
+      achievedMilestones.slice(0, 4).forEach((m, idx) => {
+        const div = document.createElement('div');
+        div.className = 'flex items-center gap-3 p-3 rounded-xl bg-slate-800/30';
+        div.innerHTML = `
+          <div class="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center font-bold text-sm">
+            ${idx + 1}
+          </div>
+          <div class="flex-1">
+            <p class="font-semibold text-white">${formatCurrency(m.amount)}</p>
+            <p class="text-xs text-slate-500">Achieved in Year ${m.year}</p>
+          </div>
+          <div class="text-emerald-400">✓</div>
+        `;
+        milestonesContainer.appendChild(div);
+      });
+
+      if (achievedMilestones.length === 0) {
+        milestonesContainer.innerHTML = '<p class="text-slate-500 text-sm text-center py-4">Adjust parameters to see milestones</p>';
+      }
+    }
+
+    function updateYearlyTable(yearlyData) {
+      const tbody = document.getElementById('yearly-body');
+      tbody.innerHTML = yearlyData.map(d => `
+        <tr class="border-b border-slate-800 hover:bg-slate-800/30">
+          <td class="py-2 text-slate-300">${d.year}</td>
+          <td class="py-2 text-right text-slate-400">${formatCurrency(d.invested)}</td>
+          <td class="py-2 text-right text-white font-medium">${formatCurrency(d.value)}</td>
+          <td class="py-2 text-right text-emerald-400">${formatCurrency(d.gain)}</td>
+        </tr>
+      `).join('');
+    }
+
+    // UI Functions
+    function setMode(mode) {
+      currentMode = mode;
+      
+      document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.classList.remove('active');
+        btn.classList.add('text-slate-400');
+      });
+      document.getElementById(`tab-${mode}`).classList.add('active');
+      document.getElementById(`tab-${mode}`).classList.remove('text-slate-400');
+
+      document.getElementById('input-panel').classList.toggle('hidden', mode === 'goal');
+      document.getElementById('goal-panel').classList.toggle('hidden', mode !== 'goal');
+      document.getElementById('stepup-section').classList.toggle('hidden', mode !== 'stepup');
+      document.getElementById('required-sip-card').classList.toggle('hidden', mode !== 'goal');
+
+      if (mode === 'goal') {
+        calculateGoalSIP();
+      } else {
+        calculateSIP();
+      }
+    }
+
+    function setChartType(type) {
+      chartType = type;
+      document.getElementById('chart-line').classList.toggle('active', type === 'line');
+      document.getElementById('chart-line').classList.toggle('text-slate-400', type !== 'line');
+      document.getElementById('chart-doughnut').classList.toggle('active', type === 'doughnut');
+      document.getElementById('chart-doughnut').classList.toggle('text-slate-400', type !== 'doughnut');
+      
+      if (currentMode === 'goal') {
+        calculateGoalSIP();
+      } else {
+        calculateSIP();
+      }
+    }
+
+    function toggleInflation() {
+      inflationEnabled = !inflationEnabled;
+      const toggle = document.getElementById('inflation-toggle');
+      const dot = document.getElementById('toggle-dot');
+      
+      if (inflationEnabled) {
+        toggle.classList.remove('bg-slate-700');
+        toggle.classList.add('bg-indigo-600');
+        dot.classList.remove('left-1', 'bg-slate-400');
+        dot.classList.add('left-7', 'bg-white');
+      } else {
+        toggle.classList.add('bg-slate-700');
+        toggle.classList.remove('bg-indigo-600');
+        dot.classList.add('left-1', 'bg-slate-400');
+        dot.classList.remove('left-7', 'bg-white');
+      }
+      
+      document.getElementById('inflation-section').classList.toggle('hidden', !inflationEnabled);
+      document.getElementById('inflation-adjusted').classList.toggle('hidden', !inflationEnabled);
+      calculateSIP();
+    }
+
+    function updateSlider(type) {
+      const rangeEl = document.getElementById(`${type}-range`);
+      const inputEl = document.getElementById(`${type}-input`);
+      inputEl.value = rangeEl.value;
+      
+      if (currentMode === 'goal') {
+        calculateGoalSIP();
+      } else {
+        calculateSIP();
+      }
+    }
+
+    function updateFromInput(type) {
+      const inputEl = document.getElementById(`${type}-input`);
+      const rangeEl = document.getElementById(`${type}-range`);
+      if (rangeEl) {
+        rangeEl.value = inputEl.value;
+      }
+      
+      if (currentMode === 'goal') {
+        calculateGoalSIP();
+      } else {
+        calculateSIP();
+      }
+    }
+
+    function setGoalPreset(preset) {
+      const presets = {
+        retirement: { goal: 50000000, years: 25, rate: 12 },
+        house: { goal: 10000000, years: 10, rate: 12 },
+        education: { goal: 5000000, years: 15, rate: 12 },
+        car: { goal: 2000000, years: 5, rate: 10 }
+      };
+      
+      const p = presets[preset];
+      document.getElementById('goal-input').value = p.goal;
+      document.getElementById('goal-range').value = p.goal;
+      document.getElementById('goal-period-input').value = p.years;
+      document.getElementById('goal-period-range').value = p.years;
+      document.getElementById('goal-return-input').value = p.rate;
+      document.getElementById('goal-return-range').value = p.rate;
+      
+      calculateGoalSIP();
+    }
+
+    function toggleTheme() {
+      const isDark = document.body.classList.contains('light-theme');
+      const toggle = document.getElementById('theme-toggle');
+      
+      if (isDark) {
+        document.body.classList.remove('light-theme');
+        toggle.textContent = '🌙';
+        localStorage.setItem('sipTheme', 'dark');
+      } else {
+        document.body.classList.add('light-theme');
+        toggle.textContent = '☀️';
+        localStorage.setItem('sipTheme', 'light');
+      }
+    }
+
+    // Initialize
+    const savedTheme = localStorage.getItem('sipTheme') || 'dark';
+    if (savedTheme === 'light') {
+      document.body.classList.add('light-theme');
+      document.getElementById('theme-toggle').textContent = '☀️';
+    }
+    
+    calculateSIP();
+    applyConfig();
+  </script>
+ <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9d37b985b3204841',t:'MTc3MjAyNzk4Mi4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
